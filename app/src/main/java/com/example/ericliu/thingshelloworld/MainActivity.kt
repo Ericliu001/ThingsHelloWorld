@@ -1,10 +1,13 @@
 package com.example.ericliu.thingshelloworld
 
 import android.app.Activity
+import android.content.ContentValues.TAG
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import com.google.android.things.pio.Gpio
 import com.google.android.things.pio.PeripheralManagerService
+import java.io.IOException
 
 /**
  * Skeleton of an Android Things activity.
@@ -38,15 +41,21 @@ class MainActivity : Activity() {
         viewRefreshHandler = ViewRefreshHandler()
 
         val service = PeripheralManagerService()
-        ledGpioGreen = service.openGpio(getGPIOforLED(RGB.GREEN))
-        ledGpioBlue = service.openGpio(getGPIOforLED(RGB.BLUE))
-        ledGpioRed = service.openGpio(getGPIOforLED(RGB.RED))
 
-        ledGpioGreen.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW)
-        ledGpioBlue.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW)
-        ledGpioRed.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW)
+        try {
+            ledGpioGreen = service.openGpio(getGPIOforLED(RGB.GREEN))
+            ledGpioBlue = service.openGpio(getGPIOforLED(RGB.BLUE))
+            ledGpioRed = service.openGpio(getGPIOforLED(RGB.RED))
 
-        viewRefreshHandler.executePerSecond(TimerRunnable(this@MainActivity, Bundle.EMPTY))
+            ledGpioGreen.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW)
+            ledGpioBlue.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW)
+            ledGpioRed.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW)
+
+            viewRefreshHandler.executePerSecond(TimerRunnable(this@MainActivity, Bundle.EMPTY))
+
+        } catch (e: IOException) {
+            Log.e(TAG, "Error on PeripheralIO API", e)
+        }
     }
 
     private inner class TimerRunnable : ViewRefreshHandler.ViewRunnable<Context> {
@@ -63,5 +72,17 @@ class MainActivity : Activity() {
             ledGpioRed.value = mLedState
         }
 
+    }
+
+
+    override fun onDestroy() {
+        super.onDestroy()
+        try {
+            ledGpioRed.close()
+            ledGpioBlue.close()
+            ledGpioGreen.close()
+        } catch (e: IOException) {
+            Log.e(TAG, "Error on PeripheralIO API", e)
+        }
     }
 }
