@@ -58,9 +58,7 @@ class MainActivity : Activity() {
         }
     }
 
-    private inner class TimerRunnable : ViewRefreshHandler.ViewRunnable<Context> {
-
-        constructor(view: Context, args: Bundle) : super(view, args)
+    private inner class TimerRunnable(view: Context, args: Bundle) : ViewRefreshHandler.ViewRunnable<Context>(view, args) {
 
 
         private var mLedState = false
