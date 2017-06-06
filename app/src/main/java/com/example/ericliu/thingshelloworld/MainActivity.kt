@@ -31,16 +31,13 @@ import java.io.IOException
  */
 class MainActivity : Activity() {
 
-    private lateinit var viewRefreshHandler: ViewRefreshHandler
+    private val viewRefreshHandler: ViewRefreshHandler = ViewRefreshHandler()
 
     private val gpioList: MutableList<Gpio> = mutableListOf();
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewRefreshHandler = ViewRefreshHandler()
-
         val service = PeripheralManagerService()
-
         try {
 
             RGB.values().forEach { color ->
@@ -75,6 +72,7 @@ class MainActivity : Activity() {
             gpioList.forEach { gpio ->
                 gpio.close()
             }
+            viewRefreshHandler.cancelAll()
         } catch (e: IOException) {
             Log.e(TAG, "Error on PeripheralIO API", e)
         }
