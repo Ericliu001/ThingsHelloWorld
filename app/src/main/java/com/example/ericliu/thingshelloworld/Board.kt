@@ -8,8 +8,8 @@ enum class RGB { RED, GREEN, BLUE }
 
 fun getGPIOforLED(color: RGB): String {
     return when (color) {
-        RGB.RED -> "IO12"
         RGB.GREEN -> "IO13"
         RGB.BLUE -> "IO8"
+        RGB.RED -> "IO12"
     }
 }

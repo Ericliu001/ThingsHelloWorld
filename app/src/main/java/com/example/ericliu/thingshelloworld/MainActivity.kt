@@ -32,9 +32,8 @@ import java.io.IOException
 class MainActivity : Activity() {
 
     private lateinit var viewRefreshHandler: ViewRefreshHandler
-    private lateinit var ledGpioGreen: Gpio
-    private lateinit var ledGpioBlue: Gpio
-    private lateinit var ledGpioRed: Gpio
+
+    private val gpioList: MutableList<Gpio> = mutableListOf();
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,15 +42,14 @@ class MainActivity : Activity() {
         val service = PeripheralManagerService()
 
         try {
-            ledGpioGreen = service.openGpio(getGPIOforLED(RGB.GREEN))
-            ledGpioBlue = service.openGpio(getGPIOforLED(RGB.BLUE))
-            ledGpioRed = service.openGpio(getGPIOforLED(RGB.RED))
 
-            ledGpioGreen.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW)
-            ledGpioBlue.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW)
-            ledGpioRed.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW)
+            RGB.values().forEach { color ->
+                var gpio = service.openGpio(getGPIOforLED(color))
+                gpioList.add(gpio)
+                gpio.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW)
+            }
 
-            viewRefreshHandler.executePerSecond(TimerRunnable(this@MainActivity, Bundle.EMPTY))
+            viewRefreshHandler.executePeriodically(TimerRunnable(this@MainActivity, Bundle.EMPTY), 200)
 
         } catch (e: IOException) {
             Log.e(TAG, "Error on PeripheralIO API", e)
@@ -61,13 +59,11 @@ class MainActivity : Activity() {
     private inner class TimerRunnable(view: Context, args: Bundle) : ViewRefreshHandler.ViewRunnable<Context>(view, args) {
 
 
-        private var mLedState = false
+        private var index: Int = 0
 
         override fun run(view: Context, args: Bundle) {
-            mLedState = !mLedState
-            ledGpioGreen.value = mLedState
-            ledGpioBlue.value = mLedState
-            ledGpioRed.value = mLedState
+            gpioList.get(index).value = !gpioList.get(index).value
+            index = (++ index)% gpioList.size
         }
 
     }
@@ -76,9 +72,9 @@ class MainActivity : Activity() {
     override fun onDestroy() {
         super.onDestroy()
         try {
-            ledGpioRed.close()
-            ledGpioBlue.close()
-            ledGpioGreen.close()
+            gpioList.forEach { gpio ->
+                gpio.close()
+            }
         } catch (e: IOException) {
             Log.e(TAG, "Error on PeripheralIO API", e)
         }
