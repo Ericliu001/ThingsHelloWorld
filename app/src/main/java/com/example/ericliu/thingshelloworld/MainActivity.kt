@@ -46,7 +46,7 @@ class MainActivity : Activity() {
                 gpio.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW)
             }
 
-            viewRefreshHandler.executePeriodically(TimerRunnable(this@MainActivity, Bundle.EMPTY), 200)
+            viewRefreshHandler.executePeriodically(TimerRunnable(this@MainActivity, Bundle.EMPTY), 500)
 
         } catch (e: IOException) {
             Log.e(TAG, "Error on PeripheralIO API", e)
@@ -59,8 +59,11 @@ class MainActivity : Activity() {
         private var index: Int = 0
 
         override fun run(view: Context, args: Bundle) {
-            gpioList.get(index).value = !gpioList.get(index).value
+            gpioList.forEach { gpio ->
+                gpio.value = false
+            }
             index = (++ index)% gpioList.size
+            gpioList.get(index).value = true
         }
 
     }
